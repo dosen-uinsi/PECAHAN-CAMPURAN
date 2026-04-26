@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🐸 Misi KA-TA-K: Mengubah Pecahan Campuran - By Mathnology</title>
+<style>
+    /* Pengaturan Dasar */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Body dibuat fixed agar tidak bisa digeser-geser saat main di HP */
+    body { 
+        display: flex; justify-content: center; align-items: center; 
+        height: 100vh; background-color: #2b2d42; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        overflow: hidden; touch-action: none;
+    }
+
+    /* Wrapper untuk Auto-Scale Responsif */
+    #scale-wrapper {
+        transform-origin: center;
+        transition: transform 0.2s ease-out;
+        display: flex; justify-content: center; align-items: center;
+    }
+
+    /* Pesan Putar Layar (Muncul di HP Mode Potret) */
+    .rotate-msg {
+        display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+        background: #d90429; color: #fff; padding: 8px 20px; border-radius: 20px;
+        font-weight: bold; font-size: 14px; z-index: 1000; white-space: nowrap;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    @media (max-aspect-ratio: 1/1) and (max-width: 768px) {
+        .rotate-msg { display: block; }
+    }
+
+    /* Bingkai Tablet */
+    .tablet-frame {
+        width: 900px; height: 600px; background-color: #111;
+        border-radius: 40px; padding: 20px; position: relative;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    /* Layar Aplikasi */
+    .screen {
+        width: 100%; height: 100%;
+        background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+        border-radius: 25px; position: relative; overflow: hidden;
+        display: flex; flex-direction: column;
+    }
+
+    /* --- MENU HAMBURGER & SIDEBAR --- */
+    .hamburger-btn {
+        position: absolute; top: 15px; left: 20px;
+        font-size: 30px; color: #fff; cursor: pointer;
+        z-index: 100; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        transition: transform 0.2s;
+    }
+    .hamburger-btn:hover { transform: scale(1.1); color: #fee440; }
+
+    .sidebar {
+        position: absolute; top: 0; left: -280px;
+        width: 280px; height: 100%;
+        background: rgba(28, 33, 40, 0.95); backdrop-filter: blur(8px);
+        z-index: 150; transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        display: flex; flex-direction: column; padding-top: 70px;
+        box-shadow: 10px 0 20px rgba(0,0,0,0.5);
+    }
+    .sidebar.aktif { left: 0; }
+
+    .close-btn {
+        position: absolute; top: 15px; right: 20px;
+        font-size: 28px; color: #fff; cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .close-btn:hover { transform: rotate(90deg); color: #d90429; }
+
+    .menu-item {
+        padding: 18px 25px; color: #fff; font-size: 18px; font-weight: bold;
+        cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s; display: flex; align-items: center; gap: 15px;
+    }
+    .menu-item:hover, .menu-item.menu-aktif {
+        background: rgba(255, 255, 255, 0.1); border-left: 6px solid #fca311; color: #fee440;
+    }
+
+    /* Header */
+    .header {
+        background: rgba(255, 255, 255, 0.2); padding: 10px; text-align: center; font-size: 20px; font-weight: 900; color: #fff;
+        text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); backdrop-filter: blur(5px); z-index: 10; line-height: 1.2;
+    }
+    .header .subtitle { font-size: 12px; font-weight: 600; color: #fee440; letter-spacing: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
+    /* Area Permainan Umum */
+    .game-area { flex: 1; position: relative; width: 100%; height: 100%; }
+
+    /* Latar Belakang */
+    .cloud { position: absolute; background: #fff; border-radius: 50px; opacity: 0.8; animation: floatClouds 20s linear infinite; z-index: 1; }
+    .cloud::before, .cloud::after { content: ''; position: absolute; background: #fff; border-radius: 50%; }
+    .c1 { width: 100px; height: 30px; top: 10%; left: -100px; }
+    .c1::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+    .c1::after { width: 40px; height: 40px; top: -10px; left: 50px; }
+    
+    .water { position: absolute; bottom: 0; width: 100%; height: 45%; background: linear-gradient(180deg, #00b4d8 0%, #0077b6 100%); border-top: 4px solid rgba(255,255,255,0.5); z-index: 2; }
+    @keyframes floatClouds { 0% { transform: translateX(-100px); } 100% { transform: translateX(1000px); } }
+
+    /* Papan Soal & Hasil */
+    .question-board, .result-board { position: absolute; top: 5%; width: 150px; padding: 10px; border-radius: 15px; text-align: center; z-index: 40; }
+    .question-board { left: 4%; background: #9b5de5; border: 5px solid #712eb3; }
+    .result-board { right: 4%; background: #8b5a2b; border: 5px solid #5c3a21; }
+    .question-title, .result-title { font-weight: bold; font-size: 15px; margin-bottom: 5px; }
+    .question-title { color: #fee440; } .result-title { color: #f4a261; }
+    
+    .question-title-clickable { transition: transform 0.2s; display: inline-block; background: rgba(0,0,0,0.2); padding: 3px 6px; border-radius: 5px; }
+    .question-title-clickable:hover { transform: scale(1.05); color: #fff; background: rgba(0,0,0,0.4); }
+
+    .q-display, .fraction-box { display: flex; align-items: center; justify-content: center; color: #fff; text-shadow: 2px 2px 0 #000; }
+    .q-whole, .res-num { font-size: 35px; font-weight: 900; }
+    .q-frac-box, .fraction-box { display: flex; flex-direction: column; align-items: center; }
+    .q-num { font-size: 18px; font-weight: bold; }
+    .q-line, .divider { width: 100%; height: 3px; background: #fff; margin: 2px 0; }
+    .res-num { font-size: 40px; line-height: 1; min-height: 40px; } 
+
+    /* Daun Teratai & Angka Besar */
+    .lilypad { position: absolute; width: 140px; height: 40px; background: #2dc653; border-radius: 50%; border-bottom: 8px solid #1b4332; z-index: 5; }
+    .pos-samping { bottom: 40%; left: 25%; } .pos-atas { bottom: 60%; left: 50%; } .pos-bawah { bottom: 20%; left: 50%; } 
+    .fraction-divider { position: absolute; bottom: 48%; left: 49%; width: 140px; height: 8px; background: #fff; border-radius: 4px; box-shadow: 0 0 15px #ffea00; z-index: 4; }
+    .number { position: absolute; font-weight: 900; color: #fff; text-shadow: 3px 3px 0 #d90429, 5px 5px 10px rgba(0,0,0,0.4); z-index: 30; }
+    .num-samping { bottom: 41%; left: 27%; font-size: 85px; } .num-atas { bottom: 61%; left: 52%; font-size: 65px; } .num-bawah { bottom: 21%; left: 52%; font-size: 65px; } 
+
+    /* Kotak Hitungan */
+    .calc-box { position: absolute; background: #fff; border: 4px solid #d90429; border-radius: 12px; padding: 8px 15px; font-size: 22px; font-weight: 900; color: #2b2d42; opacity: 0; transition: opacity 0.5s; z-index: 45; box-shadow: 0 8px 15px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 5px;}
+    .calc-box-1 { bottom: 35%; left: 6%; border-color: #8CC63F; } .calc-box-2 { bottom: 82%; left: 54%; border-color: #4facfe; }
+
+    /* Katak & Animasi Lainya */
+    .flying-number { position: absolute; font-weight: 900; z-index: 60; pointer-events: none; opacity: 0; color: #d90429; margin: 0; padding: 0; line-height: 1; transform: translate(-50%, -50%); }
+    .frog { position: absolute; width: 80px; bottom: 24%; left: 59%; z-index: 20; transition: all 0.8s cubic-bezier(0.25, 1.25, 0.5, 1); filter: drop-shadow(0 10px 5px rgba(0,0,0,0.4)); }
+    .arrow-wrapper { position: absolute; opacity: 0; transition: opacity 0.5s; z-index: 25; width: 100px; height: 75px; pointer-events: none; }
+    .wrapper-1 { bottom: 28%; left: 35%; transform: scaleX(-1) rotate(-20deg); } .wrapper-2 { bottom: 48%; left: 35%; transform: rotate(-25deg); } .wrapper-3 { bottom: 38%; left: 66%; transform: rotate(90deg); }
+    .arrow-text { position: absolute; color: #fff; font-size: 18px; font-weight: 900; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; z-index: 35; white-space: nowrap; opacity: 0; transition: opacity 0.5s; }
+    .text-ka { bottom: 22%; left: 34%; } .text-ta { bottom: 65%; left: 34%; } .text-k { bottom: 20%; left: 79%; transform: translateX(-50%); font-size: 15px; white-space: normal; width: 200px; text-align: center; line-height: 1.3; }
+    
+    /* PANAH GARIS PUTUS-PUTUS */
+    .dashed-arrow-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s; z-index: 50; pointer-events: none; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4)); }
+    .dashed-line-anim { stroke-dasharray: 12, 12; animation: dashMove 0.8s linear infinite; }
+    @keyframes dashMove { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -24; } }
+
+    /* Bar Instruksi & Tombol */
+    .instruction-bar { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; background: #fff; border-radius: 15px; padding: 15px 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border-left: 10px solid #fca311; z-index: 50; display: flex; align-items: center; justify-content: space-between; }
+    .btn-action { width: 220px; background: #fca311; color: #fff; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 0 #e59800; transition: background 0.3s; }
+    .btn-action:hover { background: #ffb703; }
+    .btn-action:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-action:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+
+    /* STYLE INPUT KHUSUS MODE LATIHAN & AHLI */
+    .input-mini {
+        width: 45px; height: 35px; font-size: 20px; font-weight: 900; text-align: center;
+        border: 2px solid #2b2d42; border-radius: 6px; outline: none; transition: 0.3s;
+        color: #d90429; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); background: #f8f9fa; margin: 0 2px;
+    }
+    .input-mini:focus { border-color: #4facfe; box-shadow: 0 0 10px #4facfe; background: #fff;}
+
+    .input-res {
+        width: 60px; height: 45px; font-size: 30px; font-weight: 900; text-align: center;
+        border: 3px solid #fff; border-radius: 8px; outline: none; background: #fff;
+        color: #2b2d42; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .input-res:focus { border-color: #fca311; }
+
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* SCORE BADGE - STANDAR (LATIHAN) */
+    .score-badge {
+        position: absolute; top: 5%; left: calc(4% + 165px); 
+        background: #fca311; color: #fff; padding: 10px 15px; border-radius: 8px;
+        font-weight: 900; font-size: 16px; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 100;
+        display: flex; align-items: center; height: 50px;
+    }
+    
+    /* SCORE BADGE - VERTIKAL (AHLI) */
+    .score-vertical {
+        flex-direction: column; justify-content: center; height: auto;
+        padding: 8px 25px; text-align: center; line-height: 1.1;
+    }
+    .score-vertical .badge-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;}
+    .score-vertical .badge-value { font-size: 24px; }
+
+    /* ================================== */
+    /* STYLE KHUSUS MODE AHLI             */
+    /* ================================== */
+    .expert-board {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center;
+        border: 8px solid #fca311; z-index: 50; width: 80%; max-width: 500px;
+    }
+    .expert-title { font-size: 24px; font-weight: 900; color: #d90429; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;}
+    .expert-content { 
+        display: flex; align-items: center; justify-content: center; gap: 20px; 
+        margin-bottom: 20px; background: #2b2d42; padding: 20px; border-radius: 15px;
+    }
+    .expert-equals { font-size: 40px; font-weight: 900; color: #fff; }
+    .ahli-feedback { font-size: 16px; font-weight: bold; color: #2b2d42; min-height: 24px; }
+    
+    .expert-content .input-res { border-color: #4facfe; }
+    .expert-content .input-res:focus { border-color: #fca311; box-shadow: 0 0 10px #fca311;}
+    .expert-content .q-whole { font-size: 55px; }
+    .expert-content .q-num { font-size: 28px; }
+
+</style>
+</head>
+<body>
+
+<div class="rotate-msg">🔄 Putar HP-mu (Landscape) untuk tampilan terbaik!</div>
+
+<div id="scale-wrapper">
+    <div class="tablet-frame">
+        <div class="screen">
+            
+            <div class="hamburger-btn" onclick="toggleMenu()">&#9776;</div>
+
+            <div class="sidebar" id="sidebarMenu">
+                <div class="close-btn" onclick="toggleMenu()">&#10006;</div>
+                <div class="menu-item menu-aktif" id="btn-belajar" onclick="pindahMode('belajar')">📚 Menu Belajar</div>
+                <div class="menu-item" id="btn-latihan" onclick="pindahMode('latihan')">📝 Menu Latihan</div>
+                <div class="menu-item" id="btn-ahli" onclick="pindahMode('ahli')">🎓 Menu Ahli</div>
+            </div>
+
+            <div class="header">
+                🐸 Misi KA-TA-K: Mengubah Pecahan Campuran<br>
+                <span class="subtitle">BY MATHNOLOGY</span>
+            </div>
+
+            <div class="game-area" id="mode-belajar">
+                <div class="cloud c1"></div> <div class="water"></div>
+
+                <div class="question-board">
+                    <div class="question-title">MISI SOAL</div>
+                    <div class="q-display">
+                        <div class="q-whole">3</div>
+                        <div class="q-frac-box"><div class="q-num">1</div><div class="q-line"></div><div class="q-num">2</div></div>
+                        <div class="q-whole" style="margin-left: 5px;">= ?</div>
+                    </div>
+                </div>
+
+                <div class="result-board">
+                    <div class="result-title">HASIL</div>
+                    <div class="fraction-box">
+                        <div class="res-num" id="hasil-atas">?</div>
+                        <div class="divider"></div>
+                        <div class="res-num" id="hasil-bawah">?</div>
+                    </div>
+                </div>
+
+                <div class="lilypad pos-samping"></div> <div class="fraction-divider"></div> <div class="lilypad pos-atas"></div> <div class="lilypad pos-bawah"></div> 
+                <div class="number num-samping">3</div> <div class="number num-atas">1</div> <div class="number num-bawah">2</div>
+
+                <div class="calc-box calc-box-1" id="calc1">2 ✖️ 3 = <span style="color: #4361ee; margin-left:5px;">6</span></div>
+                <div class="calc-box calc-box-2" id="calc2"><span style="color: #4361ee;">6</span> ➕ 1 = <span id="calc2-res" style="color: #d90429; margin-left:5px;">7</span></div>
+
+                <div class="flying-number" id="flying-num">7</div>
+
+                <div class="arrow-wrapper wrapper-1" id="panah1">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-ka" id="teks-panah1">KA (✖️)</div>
+
+                <div class="arrow-wrapper wrapper-2" id="panah2">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-ta" id="teks-panah2">TA (➕)</div>
+
+                <div class="arrow-wrapper wrapper-3" id="panah3">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-k" id="teks-panah3">K (Kakinya <span style="color: #fee440;">(penyebut)</span><br>tetap sama)</div>
+
+                <div class="dashed-arrow-wrapper" id="dashed-arrow">
+                    <svg viewBox="0 0 860 516" width="100%" height="100%" preserveAspectRatio="none"><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#fca311" /></marker></defs><path d="M 615 350 L 741 350 Q 751 350 751 340 L 751 165" fill="none" stroke="#fca311" stroke-width="6" stroke-dasharray="10,10" marker-end="url(#arrowhead)" class="dashed-line-anim" /></svg>
+                </div>
+
+                <img src="https://raw.githubusercontent.com/dosen-uinsi/PECAHAN-CAMPURAN/refs/heads/main/KATAK.gif" class="frog" id="katak" alt="Katak">
+
+                <div class="instruction-bar">
+                    <div class="inst-content">
+                        <div class="inst-title" id="judul-instruksi">Persiapan!</div>
+                        <div class="inst-text" id="teks-instruksi" style="font-size:15px;">Katak sudah siap di penyebut. Mari mulai melompat!</div>
+                    </div>
+                    <button class="btn-action" id="tombol-aksi" onclick="jalankanLangkahBelajar()">Mulai Lompat!</button>
+                </div>
+            </div>
+
+            <div class="game-area" id="mode-latihan" style="display: none;">
+                
+                <div class="score-badge">SKOR:&nbsp;<span id="skor-nilai">0</span></div>
+                <div class="cloud c1"></div> <div class="water"></div>
+
+                <div class="question-board">
+                    <div class="question-title question-title-clickable" style="cursor: pointer;" onclick="initLatihan()" title="Klik untuk mengganti soal acak">MISI SOAL 🔄</div>
+                    <div class="q-display">
+                        <div class="q-whole" id="lat-soal-whole">?</div>
+                        <div class="q-frac-box"><div class="q-num" id="lat-soal-num">?</div><div class="q-line"></div><div class="q-num" id="lat-soal-den">?</div></div>
+                        <div class="q-whole" style="margin-left: 5px;">= ?</div>
+                    </div>
+                </div>
+
+                <div class="result-board">
+                    <div class="result-title">HASIL</div>
+                    <div class="fraction-box">
+                        <div class="res-num" id="lat-hasil-atas-container">?</div>
+                        <div class="divider"></div>
+                        <div class="res-num" id="lat-hasil-bawah-container">?</div>
+                    </div>
+                </div>
+
+                <div class="lilypad pos-samping"></div> <div class="fraction-divider"></div> <div class="lilypad pos-atas"></div> <div class="lilypad pos-bawah"></div> 
+                <div class="number num-samping" id="lat-num-samping">?</div> 
+                <div class="number num-atas" id="lat-num-atas">?</div> 
+                <div class="number num-bawah" id="lat-num-bawah">?</div>
+
+                <div class="calc-box calc-box-1" id="lat-calc1"></div>
+                <div class="calc-box calc-box-2" id="lat-calc2"></div>
+
+                <div class="flying-number" id="lat-flying-num"></div>
+
+                <div class="arrow-wrapper wrapper-1" id="lat-panah1">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-ka" id="lat-teks-panah1">KA (✖️)</div>
+
+                <div class="arrow-wrapper wrapper-2" id="lat-panah2">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-ta" id="lat-teks-panah2">TA (➕)</div>
+
+                <div class="arrow-wrapper wrapper-3" id="lat-panah3">
+                    <svg viewBox="0 0 210 170" width="100%" height="100%"><path d="M 20 100 L 28 112 L 118 112 L 118 152 L 198 87 L 190 75 L 110 140 L 110 100 Z" fill="#1C2128"/><path d="M 20 50 L 110 50 L 110 10 L 190 75 L 110 140 L 110 100 L 20 100 Z" fill="#8CC63F"/></svg>
+                </div> <div class="arrow-text text-k" id="lat-teks-panah3">K (Kakinya <span style="color: #fee440;">(penyebut)</span><br>tetap sama)</div>
+
+                <div class="dashed-arrow-wrapper" id="lat-dashed-arrow">
+                    <svg viewBox="0 0 860 516" width="100%" height="100%" preserveAspectRatio="none"><defs><marker id="arrowhead-lat" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#fca311" /></marker></defs><path d="M 615 350 L 741 350 Q 751 350 751 340 L 751 165" fill="none" stroke="#fca311" stroke-width="6" stroke-dasharray="10,10" marker-end="url(#arrowhead-lat)" class="dashed-line-anim" /></svg>
+                </div>
+
+                <img src="https://raw.githubusercontent.com/dosen-uinsi/PECAHAN-CAMPURAN/refs/heads/main/KATAK.gif" class="frog" id="lat-katak" alt="Katak">
+
+                <div class="instruction-bar">
+                    <div class="inst-content">
+                        <div class="inst-title" id="lat-judul-instruksi">Latihan Dimulai!</div>
+                        <div class="inst-text" id="lat-teks-instruksi" style="font-size:15px;">Ayo mulai misi. Kamu yang harus mengetik semua perhitungannya!</div>
+                    </div>
+                    <button class="btn-action" id="lat-tombol-aksi" onclick="prosesLangkahLatihan()">Mulai Misi!</button>
+                </div>
+            </div>
+
+            <div class="game-area" id="mode-ahli" style="display: none;">
+                <div class="score-badge score-vertical" style="left: 4%;">
+                    <span class="badge-title">SKOR</span>
+                    <span class="badge-value" id="skor-ahli">0</span>
+                </div>
+                
+                <div class="cloud c1"></div> <div class="water"></div>
+
+                <div class="expert-board">
+                    <div class="expert-title">🎓 Tantangan Ahli</div>
+                    
+                    <div class="expert-content">
+                        <div class="q-display" style="color: #fff;">
+                            <div class="q-whole" id="ahli-whole">?</div>
+                            <div class="q-frac-box" style="margin: 0 10px;">
+                                <div class="q-num" id="ahli-num">?</div>
+                                <div class="q-line"></div>
+                                <div class="q-num" id="ahli-den">?</div>
+                            </div>
+                        </div>
+                        
+                        <div class="expert-equals">=</div>
+                        
+                        <div class="fraction-box">
+                            <input type="number" id="ahli-res-num" class="input-res" placeholder="?">
+                            <div class="divider"></div>
+                            <input type="number" id="ahli-res-den" class="input-res" placeholder="?">
+                        </div>
+                    </div>
+
+                    <div class="ahli-feedback" id="ahli-feedback">Jawab langsung hasil pecahan biasanya!</div>
+                    <button class="btn-action" id="btn-cek-ahli" onclick="cekJawabanAhli()" style="margin-top: 20px; width: 100%;">Cek Jawaban</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // LOGIKA AUTO-SCALE RESPONSIVE LAYOUT
+    // ==========================================
+    let currentScale = 1;
+    function sesuaikanUkuran() {
+        const wrapper = document.getElementById('scale-wrapper');
+        // Margin 40px kiri-kanan dan atas-bawah
+        const scaleX = window.innerWidth / 940; 
+        const scaleY = window.innerHeight / 640; 
+        
+        // Pilih skala terkecil agar selalu muat di layar
+        currentScale = Math.min(scaleX, scaleY, 1); 
+        wrapper.style.transform = `scale(${currentScale})`;
+    }
+    // Dengarkan event resize dari window
+    window.addEventListener('resize', sesuaikanUkuran);
+    sesuaikanUkuran(); // Panggil saat pertama kali dimuat
+
+    // ==========================================
+    // LOGIKA MENU
+    // ==========================================
+    const sidebar = document.getElementById('sidebarMenu');
+    function toggleMenu() { sidebar.classList.toggle('aktif'); }
+
+    function pindahMode(mode) {
+        sidebar.classList.remove('aktif');
+        const divBelajar = document.getElementById('mode-belajar');
+        const divLatihan = document.getElementById('mode-latihan');
+        const divAhli = document.getElementById('mode-ahli');
+        
+        const btnBelajar = document.getElementById('btn-belajar');
+        const btnLatihan = document.getElementById('btn-latihan');
+        const btnAhli = document.getElementById('btn-ahli');
+
+        if (mode === 'belajar') {
+            divBelajar.style.display = 'block'; divLatihan.style.display = 'none'; divAhli.style.display = 'none';
+            btnBelajar.classList.add('menu-aktif'); btnLatihan.classList.remove('menu-aktif'); btnAhli.classList.remove('menu-aktif');
+        } else if (mode === 'latihan') {
+            divBelajar.style.display = 'none'; divLatihan.style.display = 'block'; divAhli.style.display = 'none';
+            btnLatihan.classList.add('menu-aktif'); btnBelajar.classList.remove('menu-aktif'); btnAhli.classList.remove('menu-aktif');
+            if (document.getElementById('lat-soal-whole').innerText === "?") { initLatihan(); }
+        } else if (mode === 'ahli') {
+            divBelajar.style.display = 'none'; divLatihan.style.display = 'none'; divAhli.style.display = 'block';
+            btnAhli.classList.add('menu-aktif'); btnBelajar.classList.remove('menu-aktif'); btnLatihan.classList.remove('menu-aktif');
+            if (document.getElementById('ahli-whole').innerText === "?") { initAhli(); }
+        }
+    }
+
+    // ==========================================
+    // LOGIKA MODE AHLI (CEPAT & SIMPEL)
+    // ==========================================
+    let soalAhli = { whole: 0, num: 0, den: 0 };
+    let skorAhliNilai = 0;
+
+    function initAhli() {
+        let den = Math.floor(Math.random() * 8) + 2; 
+        let whole = Math.floor(Math.random() * 9) + 1; 
+        let num = Math.floor(Math.random() * (den - 1)) + 1; 
+        soalAhli = { whole: whole, num: num, den: den };
+
+        document.getElementById('ahli-whole').innerText = whole;
+        document.getElementById('ahli-num').innerText = num;
+        document.getElementById('ahli-den').innerText = den;
+
+        document.getElementById('ahli-res-num').value = "";
+        document.getElementById('ahli-res-den').value = "";
+        
+        const feedback = document.getElementById('ahli-feedback');
+        feedback.innerText = "Jawab langsung hasil pecahan biasanya!";
+        feedback.style.color = "#2b2d42";
+        
+        const btn = document.getElementById('btn-cek-ahli');
+        btn.innerText = "Cek Jawaban";
+        btn.style.background = "#fca311";
+        btn.onclick = cekJawabanAhli;
+        
+        document.getElementById('ahli-res-num').focus();
+    }
+
+    function cekJawabanAhli() {
+        const inNum = parseInt(document.getElementById('ahli-res-num').value);
+        const inDen = parseInt(document.getElementById('ahli-res-den').value);
+        const feedback = document.getElementById('ahli-feedback');
+        
+        if (isNaN(inNum) || isNaN(inDen)) {
+            feedback.innerText = "⚠️ Isi dulu pembilang dan penyebutnya!";
+            feedback.style.color = "#d90429";
+            return;
+        }
+        
+        const correctNum = (soalAhli.whole * soalAhli.den) + soalAhli.num;
+        const correctDen = soalAhli.den;
+        
+        if (inNum === correctNum && inDen === correctDen) {
+            feedback.innerText = "🎉 Benar Sekali! Hitungan yang sangat cepat!";
+            feedback.style.color = "#2dc653";
+            
+            skorAhliNilai += 20; 
+            document.getElementById('skor-ahli').innerText = skorAhliNilai;
+            
+            const btn = document.getElementById('btn-cek-ahli');
+            btn.innerText = "Soal Berikutnya";
+            btn.style.background = "#4facfe";
+            btn.onclick = initAhli;
+        } else {
+            feedback.innerText = "❌ Masih kurang tepat. Ayo ingat lagi metode KA-TA-K!";
+            feedback.style.color = "#d90429";
+        }
+    }
+
+
+    // ==========================================
+    // LOGIKA MODE LATIHAN (INTERAKTIF PENUH)
+    // ==========================================
+    let soalLat = { whole: 0, num: 0, den: 0 };
+    let langkahLat = 0;
+    let skorLat = 0;
+
+    function initLatihan() {
+        langkahLat = 0;
+        
+        let den = Math.floor(Math.random() * 8) + 2; 
+        let whole = Math.floor(Math.random() * 9) + 1; 
+        let num = Math.floor(Math.random() * (den - 1)) + 1; 
+        soalLat = { whole: whole, num: num, den: den };
+
+        document.getElementById('lat-soal-whole').innerText = whole;
+        document.getElementById('lat-soal-num').innerText = num;
+        document.getElementById('lat-soal-den').innerText = den;
+        document.getElementById('lat-num-samping').innerText = whole;
+        document.getElementById('lat-num-atas').innerText = num;
+        document.getElementById('lat-num-bawah').innerText = den;
+
+        document.getElementById('lat-hasil-atas-container').innerHTML = "?";
+        document.getElementById('lat-hasil-bawah-container').innerHTML = "?";
+
+        const katakLat = document.getElementById('lat-katak');
+        katakLat.style.bottom = "24%"; katakLat.style.left = "59%";
+        
+        document.getElementById('lat-panah1').style.opacity = "0"; document.getElementById('lat-teks-panah1').style.opacity = "0";
+        document.getElementById('lat-panah2').style.opacity = "0"; document.getElementById('lat-teks-panah2').style.opacity = "0";
+        document.getElementById('lat-panah3').style.opacity = "0"; document.getElementById('lat-teks-panah3').style.opacity = "0";
+        document.getElementById('lat-calc1').style.opacity = "0"; document.getElementById('lat-calc2').style.opacity = "0";
+        document.getElementById('lat-dashed-arrow').style.opacity = "0";
+        document.getElementById('lat-flying-num').style.opacity = "0";
+
+        document.getElementById('lat-judul-instruksi').innerText = "Soal Baru Siap!";
+        document.getElementById('lat-teks-instruksi').innerHTML = "Katak siap di penyebut. Mari kita hitung langkah demi langkah!";
+        document.getElementById('lat-teks-instruksi').style.color = "#2b2d42";
+        
+        const btn = document.getElementById('lat-tombol-aksi');
+        btn.innerText = "Mulai Misi!"; btn.style.background = "#fca311"; btn.disabled = false;
+    }
+
+    function prosesLangkahLatihan() {
+        const btn = document.getElementById('lat-tombol-aksi');
+        const title = document.getElementById('lat-judul-instruksi');
+        const text = document.getElementById('lat-teks-instruksi');
+
+        if (langkahLat === 0) {
+            document.getElementById('lat-panah1').style.opacity = "1";
+            document.getElementById('lat-teks-panah1').style.opacity = "1";
+            
+            const calc1 = document.getElementById('lat-calc1');
+            calc1.style.opacity = "1";
+            calc1.innerHTML = `<input type="number" id="ka-a" class="input-mini"> ✖️ <input type="number" id="ka-b" class="input-mini"> = <input type="number" id="ka-res" class="input-mini">`;
+            
+            title.innerText = "1. KA (Kalikan)";
+            text.innerHTML = "Angka apa saja yang harus dikalikan? Isi ketiga kotaknya!";
+            text.style.color = "#2b2d42";
+            
+            btn.innerText = "Cek Hasil KA"; btn.style.background = "#e63946";
+            document.getElementById('ka-a').focus();
+            langkahLat = 1;
+
+        } else if (langkahLat === 1) {
+            const a = parseInt(document.getElementById('ka-a').value);
+            const b = parseInt(document.getElementById('ka-b').value);
+            const res = parseInt(document.getElementById('ka-res').value);
+            
+            if (isNaN(a) || isNaN(b) || isNaN(res)) {
+                text.innerHTML = "⚠️ Eits, isi semua kotak hitungannya dulu ya!"; text.style.color = "#d90429"; return;
+            }
+
+            const inputAngkaBenar = (a === soalLat.den && b === soalLat.whole) || (a === soalLat.whole && b === soalLat.den);
+            const inputHasilBenar = (res === (soalLat.den * soalLat.whole));
+
+            if (inputAngkaBenar && inputHasilBenar) {
+                document.getElementById('lat-calc1').innerHTML = `${a} ✖️ ${b} = <span style="color: #4361ee; margin-left:5px;">${res}</span>`;
+                
+                const katakLat = document.getElementById('lat-katak');
+                katakLat.style.bottom = "44%"; katakLat.style.left = "34%";
+                
+                setTimeout(() => {
+                    document.getElementById('lat-panah2').style.opacity = "1";
+                    document.getElementById('lat-teks-panah2').style.opacity = "1";
+                    
+                    const calc2 = document.getElementById('lat-calc2');
+                    calc2.style.opacity = "1";
+                    calc2.innerHTML = `<input type="number" id="ta-a" class="input-mini"> ➕ <input type="number" id="ta-b" class="input-mini"> = <input type="number" id="ta-res" class="input-mini">`;
+                    
+                    title.innerText = "2. TA (Tambahkan)";
+                    text.innerHTML = "Tambahkan hasil tadi dengan pembilang atas! Isi semua kotaknya.";
+                    text.style.color = "#2b2d42";
+                    btn.innerText = "Cek Hasil TA"; btn.style.background = "#2a9d8f";
+                    
+                    document.getElementById('ta-a').focus();
+                }, 800);
+                
+                langkahLat = 2;
+            } else if (!inputAngkaBenar) {
+                text.innerHTML = "❌ Salah! Perhatikan panah. Kalikan PENYEBUT dengan Bilangan Bulat (samping)."; text.style.color = "#d90429";
+            } else {
+                text.innerHTML = "❌ Salah! Angka yang dikali sudah benar, tapi hasil hitungmu keliru."; text.style.color = "#d90429";
+            }
+
+        } else if (langkahLat === 2) {
+            const a = parseInt(document.getElementById('ta-a').value);
+            const b = parseInt(document.getElementById('ta-b').value);
+            const res = parseInt(document.getElementById('ta-res').value);
+            const correctKA = soalLat.den * soalLat.whole;
+
+            if (isNaN(a) || isNaN(b) || isNaN(res)) {
+                text.innerHTML = "⚠️ Isi semua kotak hitungan tambahnya dulu!"; text.style.color = "#d90429"; return;
+            }
+
+            const inputAngkaBenar = (a === correctKA && b === soalLat.num);
+            const inputHasilBenar = (res === (correctKA + soalLat.num));
+
+            if (inputAngkaBenar && inputHasilBenar) {
+                document.getElementById('lat-calc2').innerHTML = `<span style="color: #4361ee;">${a}</span> ➕ ${b} = <span id="lat-calc2-res" style="color: #d90429; margin-left:5px;">${res}</span>`;
+                
+                const katakLat = document.getElementById('lat-katak');
+                katakLat.style.bottom = "64%"; katakLat.style.left = "59%";
+                
+                btn.disabled = true;
+                title.innerText = "Memindahkan..."; text.innerHTML = "Bagus! Angka ini akan terbang ke papan hasil akhir."; text.style.color = "#2b2d42";
+
+                setTimeout(() => { animasikanTerbangLatihan(res); }, 800);
+            } else if (!inputAngkaBenar) {
+                text.innerHTML = "❌ Salah! Masukkan [Hasil Kali Tadi] ditambah [Pembilang]."; text.style.color = "#d90429";
+            } else {
+                text.innerHTML = "❌ Salah! Hasil penjumlahanmu masih keliru. Ayo hitung lagi!"; text.style.color = "#d90429";
+            }
+
+        } else if (langkahLat === 3) {
+            const inputTop = parseInt(document.getElementById('res-num').value);
+            const expectedTop = (soalLat.den * soalLat.whole) + soalLat.num;
+
+            if (isNaN(inputTop)) {
+                text.innerHTML = "⚠️ Jangan lupa ketik pembilangnya!"; text.style.color = "#d90429"; return;
+            }
+
+            if (inputTop === expectedTop) {
+                document.getElementById('lat-hasil-atas-container').innerHTML = `<span style="color:#fff;">${inputTop}</span>`;
+                
+                btn.disabled = true;
+                title.innerText = "3. K (Kakinya Tetap) ⬇️"; text.innerHTML = "Bagus! Sekarang Katak melompat turun membawa penyebut..."; text.style.color = "#2b2d42";
+
+                const katakLat = document.getElementById('lat-katak');
+                katakLat.style.bottom = "24%"; 
+                document.getElementById('lat-panah3').style.opacity = "1";
+                document.getElementById('lat-teks-panah3').style.opacity = "1";
+                
+                setTimeout(() => {
+                    document.getElementById('lat-dashed-arrow').style.opacity = "1";
+
+                    setTimeout(() => {
+                        document.getElementById('lat-hasil-bawah-container').innerHTML = `<input type="number" id="res-den" class="input-res" placeholder="?">`;
+                        
+                        text.innerHTML = "Garis putus-putus mengalir! Penyebutnya tetap sama, ketik di kotak bawah!";
+                        btn.innerText = "Cek Penyebut"; btn.style.background = "#fca311"; btn.disabled = false; 
+                        
+                        document.getElementById('res-den').focus();
+                        langkahLat = 4;
+                    }, 600);
+                }, 600);
+
+            } else {
+                text.innerHTML = "❌ Ups! Ketik angka hasil TA tadi untuk pembilangnya."; text.style.color = "#d90429";
+            }
+
+        } else if (langkahLat === 4) {
+            const inputBot = parseInt(document.getElementById('res-den').value);
+            const expectedBot = soalLat.den;
+
+            if (isNaN(inputBot)) {
+                text.innerHTML = "⚠️ Jangan lupa ketik penyebutnya di Papan Hasil!"; text.style.color = "#d90429"; return;
+            }
+
+            if (inputBot === expectedBot) {
+                document.getElementById('lat-hasil-bawah-container').innerHTML = `<span style="color:#fff;">${inputBot}</span>`;
+                
+                title.innerText = "Selesai! 🎉"; text.innerHTML = "Luar Biasa! Kamu berhasil menyelesaikan semua langkah sendiri!"; text.style.color = "#2dc653";
+                
+                btn.innerText = "Main Soal Berikutnya"; btn.style.background = "#4facfe";
+                
+                skorLat += 10;
+                document.getElementById('skor-nilai').innerText = skorLat;
+                langkahLat = 5;
+
+            } else {
+                text.innerHTML = "❌ Ups! Ingat, penyebut (K) tetap sama seperti soal aslinya!"; text.style.color = "#d90429";
+            }
+        } else if (langkahLat === 5) {
+            initLatihan();
+        }
+    }
+
+    function animasikanTerbangLatihan(ansTA) {
+        const flyingNum = document.getElementById('lat-flying-num');
+        const hasilAtasContainer = document.getElementById('lat-hasil-atas-container');
+        const sourceSpan = document.getElementById('lat-calc2-res');
+        
+        // Membagi rect dengan currentScale karena DOM menggunakan posisi layar global
+        const sourceRect = sourceSpan.getBoundingClientRect();
+        const targetRect = hasilAtasContainer.getBoundingClientRect();
+        const gameArea = document.getElementById('mode-latihan');
+        const areaRect = gameArea.getBoundingClientRect();
+
+        const startX = (sourceRect.left - areaRect.left + (sourceRect.width / 2)) / currentScale;
+        const startY = (sourceRect.top - areaRect.top + (sourceRect.height / 2)) / currentScale;
+        const endX = (targetRect.left - areaRect.left + (targetRect.width / 2)) / currentScale;
+        const endY = (targetRect.top - areaRect.top + (targetRect.height / 2)) / currentScale;
+
+        hasilAtasContainer.style.color = "transparent";
+
+        flyingNum.innerHTML = ansTA;
+        flyingNum.style.transition = "none"; 
+        flyingNum.style.left = startX + "px"; flyingNum.style.top = startY + "px"; 
+        flyingNum.style.bottom = "auto"; flyingNum.style.fontSize = "22px";
+        flyingNum.style.color = "#d90429"; flyingNum.style.textShadow = "none";
+        flyingNum.style.opacity = "1";
+
+        void flyingNum.offsetWidth;
+
+        flyingNum.style.transition = "all 1.2s cubic-bezier(0.25, 1, 0.5, 1)";
+        flyingNum.style.left = endX + "px"; flyingNum.style.top = endY + "px"; 
+        flyingNum.style.fontSize = "40px"; flyingNum.style.color = "#fff"; 
+        flyingNum.style.textShadow = "2px 2px 0 #000";
+
+        setTimeout(() => {
+            flyingNum.style.opacity = "0"; 
+            hasilAtasContainer.innerHTML = `<input type="number" id="res-num" class="input-res" placeholder="?">`;
+            document.getElementById('lat-judul-instruksi').innerText = "Isi Pembilang!";
+            document.getElementById('lat-teks-instruksi').innerHTML = "Angka sudah berada di atas. Ketik angkanya sebagai Pembilang!";
+            
+            const btn = document.getElementById('lat-tombol-aksi');
+            btn.innerText = "Cek Pembilang"; btn.style.background = "#fca311"; btn.disabled = false; 
+            
+            document.getElementById('res-num').focus();
+            langkahLat = 3; 
+        }, 1200);
+    }
+
+    // ==========================================
+    // LOGIKA MODE BELAJAR (ANIMASI OTOMATIS)
+    // ==========================================
+    let langkahBelajar = 0; 
+    function jalankanLangkahBelajar() {
+        const katak = document.getElementById('katak');
+        const panah1 = document.getElementById('panah1'); const teksPanah1 = document.getElementById('teks-panah1');
+        const panah2 = document.getElementById('panah2'); const teksPanah2 = document.getElementById('teks-panah2');
+        const panah3 = document.getElementById('panah3'); const teksPanah3 = document.getElementById('teks-panah3');
+        const calc1 = document.getElementById('calc1'); const calc2 = document.getElementById('calc2');
+        const flyingNum = document.getElementById('flying-num'); const dashedArrow = document.getElementById('dashed-arrow');
+        const judulInstruksi = document.getElementById('judul-instruksi'); const teksInstruksi = document.getElementById('teks-instruksi');
+        const tombolAksi = document.getElementById('tombol-aksi');
+        const hasilAtas = document.getElementById('hasil-atas'); const hasilBawah = document.getElementById('hasil-bawah');
+
+        if (langkahBelajar === 0) {
+            panah1.style.opacity = "1"; teksPanah1.style.opacity = "1"; calc1.style.opacity = "1"; 
+            katak.style.bottom = "44%"; katak.style.left = "34%"; 
+            judulInstruksi.innerHTML = "1. KA (Kalikan) ✖️"; teksInstruksi.innerHTML = "Lompat ke samping! 2 dikali 3 = <b style='color: #4361ee;'>6</b>.";
+            tombolAksi.innerHTML = "Lanjut!"; tombolAksi.style.background = "#e63946";
+            langkahBelajar = 1;
+        } else if (langkahBelajar === 1) {
+            panah2.style.opacity = "1"; teksPanah2.style.opacity = "1"; calc2.style.opacity = "1"; 
+            katak.style.bottom = "64%"; katak.style.left = "59%"; 
+            judulInstruksi.innerHTML = "2. TA (Tambahkan) ➕"; teksInstruksi.innerHTML = "Lompat ke atas! <b style='color: #4361ee;'>6</b> ditambah 1 = 7.";
+            tombolAksi.innerHTML = "Pindahkan Hasil!"; tombolAksi.style.background = "#2a9d8f";
+            langkahBelajar = 2;
+        } else if (langkahBelajar === 2) {
+            tombolAksi.disabled = true; judulInstruksi.innerHTML = "Memindahkan..."; teksInstruksi.innerHTML = "Angka 7 terbang menjadi pembilang baru!";
+
+            const sourceSpan = document.getElementById('calc2-res');
+            const sourceRect = sourceSpan.getBoundingClientRect(); const targetRect = hasilAtas.getBoundingClientRect();
+            const gameArea = document.getElementById('mode-belajar'); const areaRect = gameArea.getBoundingClientRect();
+
+            const startX = (sourceRect.left - areaRect.left + (sourceRect.width / 2)) / currentScale; 
+            const startY = (sourceRect.top - areaRect.top + (sourceRect.height / 2)) / currentScale;
+            const endX = (targetRect.left - areaRect.left + (targetRect.width / 2)) / currentScale; 
+            const endY = (targetRect.top - areaRect.top + (targetRect.height / 2)) / currentScale;
+
+            hasilAtas.style.color = "transparent";
+            flyingNum.style.transition = "none"; flyingNum.style.left = startX + "px"; flyingNum.style.top = startY + "px"; 
+            flyingNum.style.bottom = "auto"; flyingNum.style.fontSize = "22px"; flyingNum.style.color = "#d90429";
+            flyingNum.style.textShadow = "none"; flyingNum.style.opacity = "1";
+
+            void flyingNum.offsetWidth;
+
+            flyingNum.style.transition = "all 1.2s cubic-bezier(0.25, 1, 0.5, 1)";
+            flyingNum.style.left = endX + "px"; flyingNum.style.top = endY + "px"; flyingNum.style.fontSize = "40px"; 
+            flyingNum.style.color = "#fff"; flyingNum.style.textShadow = "2px 2px 0 #000";
+
+            setTimeout(() => {
+                flyingNum.style.opacity = "0"; hasilAtas.style.color = "#fff"; hasilAtas.innerHTML = "7"; 
+                judulInstruksi.innerHTML = "Pembilang Selesai! ✨"; teksInstruksi.innerHTML = "Sekarang, mari bawa penyebutnya! Klik untuk katak melompat turun.";
+                tombolAksi.innerHTML = "Lompat ke Bawah!"; tombolAksi.style.background = "#4facfe"; tombolAksi.disabled = false; 
+                langkahBelajar = 3; 
+            }, 1200);
+
+        } else if (langkahBelajar === 3) {
+            tombolAksi.disabled = true; judulInstruksi.innerHTML = "3. K (Kakinya Tetap) ⬇️"; teksInstruksi.innerHTML = "Katak kembali turun! Kakinya (penyebut) tetap sama.";
+            katak.style.bottom = "24%"; panah3.style.opacity = "1"; teksPanah3.style.opacity = "1";
+
+            setTimeout(() => {
+                judulInstruksi.innerHTML = "Menyamakan Penyebut..."; teksInstruksi.innerHTML = "Garis putus-putus mengalir membawa penyebut ke hasil akhir!";
+                dashedArrow.style.opacity = "1";
+
+                setTimeout(() => {
+                    hasilBawah.innerHTML = "2"; judulInstruksi.innerHTML = "Selesai! 🐸"; teksInstruksi.innerHTML = "Penyebutnya tetap sama (2). Hasil akhirnya 7/2!";
+                    tombolAksi.innerHTML = "Ulangi"; tombolAksi.style.background = "#4361ee"; tombolAksi.disabled = false; 
+                    langkahBelajar = 4;
+                }, 1000);
+            }, 800);
+
+        } else {
+            langkahBelajar = 0; katak.style.bottom = "24%"; katak.style.left = "59%"; 
+            panah1.style.opacity = "0"; teksPanah1.style.opacity = "0"; panah2.style.opacity = "0"; teksPanah2.style.opacity = "0";
+            panah3.style.opacity = "0"; teksPanah3.style.opacity = "0"; calc1.style.opacity = "0"; calc2.style.opacity = "0";
+            flyingNum.style.opacity = "0"; dashedArrow.style.opacity = "0"; 
+            hasilAtas.style.color = "#fff"; hasilAtas.innerHTML = "?"; hasilBawah.innerHTML = "?";
+            judulInstruksi.innerHTML = "Persiapan!"; teksInstruksi.innerHTML = "Katak sudah siap di penyebut. Mari mulai melompat!";
+            tombolAksi.innerHTML = "Mulai Lompat!"; tombolAksi.style.background = "#fca311";
+        }
+    }
+</script>
+
+</body>
+</html>
